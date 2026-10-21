@@ -82,3 +82,61 @@ module "ssm_parameters" {
   db_port = module.rds.db_instance_port
   db_name = module.rds.db_name
 }
+
+
+# ============================================================
+# IAM Roles for ECS
+# ============================================================
+module "iam" {
+  source = "../../modules/iam"
+
+  name_prefix               = local.name_prefix
+  db_credentials_secret_arn = module.rds.db_credentials_secret_arn
+  ssm_parameter_arns = [
+    module.ssm_parameters.app_env_arn,
+    module.ssm_parameters.db_host_arn,
+    module.ssm_parameters.db_port_arn,
+    module.ssm_parameters.db_name_arn
+  ]
+}
+
+# ============================================================
+# Application Load Balancer
+# ============================================================
+module "alb" {
+  source = "../../modules/alb"
+
+  name_prefix           = local.name_prefix
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  alb_security_group_id = module.security_groups.alb_sg_id
+  app_port              = var.app_port
+  health_check_path     = "/health"
+}
+
+# ============================================================
+# ECS Cluster, Task Definition & Service
+# ============================================================
+module "ecs" {
+  source = "../../modules/ecs"
+
+  name_prefix           = local.name_prefix
+  aws_region            = var.aws_region
+  environment           = var.environment
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  ecs_security_group_id = module.security_groups.ecs_sg_id
+  ecr_repository_url    = module.ecr.repository_url
+
+  app_port           = var.app_port
+  desired_count      = 2
+  execution_role_arn = module.iam.ecs_execution_role_arn
+  task_role_arn      = module.iam.ecs_task_role_arn
+  target_group_arn   = module.alb.target_group_arn
+  alb_listener_arn   = module.alb.alb_arn
+
+  db_host                   = module.rds.db_instance_address
+  db_port                   = module.rds.db_instance_port
+  db_name                   = module.rds.db_name
+  db_user                   = "appuser"
+  db_credentials_secret_arn = module.rds.db_credentials_secret_arn
+}

@@ -48,3 +48,26 @@ output "db_credentials_secret_arn" {
 output "db_credentials_secret_name" {
   value = module.rds.db_credentials_secret_name
 }
+
+
+
+# ============================================================
+# ALB & Application URL
+# ============================================================
+output "alb_dns_name" {
+  description = "ALB Public DNS — Access application here"
+  value       = module.alb.alb_dns_name
+}
+
+output "application_url" {
+  description = "Application Web URL"
+  value       = "http://${module.alb.alb_dns_name}"
+}
+
+output "ecs_cluster_name" {
+  value = module.ecs.cluster_name
+}
+
+output "ecs_service_name" {
+  value = module.ecs.service_name
+}
