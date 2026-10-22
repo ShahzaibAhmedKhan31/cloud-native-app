@@ -63,10 +63,10 @@ module "rds" {
   db_name     = "itemsdb"
   db_username = "appuser"
 
-  multi_az              = false   # dev
+  multi_az              = false # dev
   backup_retention_days = 7
-  skip_final_snapshot   = true    # dev
-  deletion_protection   = false   # dev
+  skip_final_snapshot   = true  # dev
+  deletion_protection   = false # dev
 }
 
 # ============================================================

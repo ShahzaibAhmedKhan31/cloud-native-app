@@ -13,7 +13,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "cloud-native-app-tfstate-88450bab"  # 👈 YOUR bucket
+    bucket         = "cloud-native-app-tfstate-88450bab" # 👈 YOUR bucket
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "cloud-native-app-tflock"
