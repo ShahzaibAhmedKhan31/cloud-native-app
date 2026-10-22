@@ -71,3 +71,8 @@ output "ecs_cluster_name" {
 output "ecs_service_name" {
   value = module.ecs.service_name
 }
+
+output "github_actions_role_arn" {
+  description = "Copy this ARN to GitHub Repository Secrets"
+  value       = module.github_oidc.role_arn
+}

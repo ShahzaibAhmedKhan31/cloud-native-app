@@ -19,7 +19,7 @@ app = FastAPI(
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to the Cloud-Native Items API",
+        "message": "Welcome to the Cloud-Native Items API (Automated via GitHub Actions CI/CD!)",
         "version": settings.app_version,
         "env": settings.app_env,
     }

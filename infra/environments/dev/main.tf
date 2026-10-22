@@ -140,3 +140,15 @@ module "ecs" {
   db_user                   = "appuser"
   db_credentials_secret_arn = module.rds.db_credentials_secret_arn
 }
+
+
+# ============================================================
+# GitHub Actions OIDC Authentication
+# ============================================================
+module "github_oidc" {
+  source = "../../modules/github-oidc"
+
+  name_prefix        = local.name_prefix
+  github_org_or_user = var.github_username
+  github_repo        = "cloud-native-app"
+}

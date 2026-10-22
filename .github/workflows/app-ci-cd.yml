@@ -1,0 +1,124 @@
+name: Application CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - '.github/workflows/app-ci-cd.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+
+permissions:
+  id-token: write   # Required for AWS OIDC authentication
+  contents: read    # Required to checkout code
+
+jobs:
+  # ------------------------------------------------------------
+  # JOB 1: Test & Quality Checks
+  # ------------------------------------------------------------
+  test:
+    name: Run Linter & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+
+      - name: Run Tests with Pytest
+        run: |
+          cd app
+          pytest
+
+  # ------------------------------------------------------------
+  # JOB 2: Build, Scan & Deploy (Only on merge to main)
+  # ------------------------------------------------------------
+  build-and-deploy:
+    name: Build Image, Scan & Deploy to ECS
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Image Tag
+        id: prep
+        run: |
+          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          ECR_REPOSITORY="${{ vars.ECR_REPOSITORY }}"
+          IMAGE_TAG="${{ github.sha }}"
+          echo "image_latest=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_OUTPUT
+          echo "image_sha=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          file: ./app/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.image_latest }}
+            ${{ steps.prep.outputs.image_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.prep.outputs.image_sha }}
+          format: 'table'
+          exit-code: '0'   # Don't fail workflow on findings during learning; set '1' to block HIGH/CRITICAL vulnerabilities in prod
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Download Active Task Definition from ECS
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition cloud-native-app-dev-task \
+            --query taskDefinition > task-definition.json
+
+      - name: Update Container Image Tag in Task Definition
+        id: render-app-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: app
+          image: ${{ steps.prep.outputs.image_sha }}
+
+      - name: Deploy Updated Task Definition to ECS Fargate
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-app-container.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true

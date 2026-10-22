@@ -39,3 +39,8 @@ variable "app_port" {
   type        = number
   default     = 8000
 }
+
+variable "github_username" {
+  description = "GitHub Username for OIDC trust"
+  type        = string
+}
