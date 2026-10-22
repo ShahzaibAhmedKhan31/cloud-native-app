@@ -72,7 +72,11 @@ output "ecs_service_name" {
   value = module.ecs.service_name
 }
 
-output "github_actions_role_arn" {
-  description = "Copy this ARN to GitHub Repository Secrets"
-  value       = module.github_oidc.role_arn
+output "github_access_key_id" {
+  value = module.github_oidc.access_key_id
+}
+
+output "github_secret_access_key" {
+  value     = module.github_oidc.secret_access_key
+  sensitive = true
 }
