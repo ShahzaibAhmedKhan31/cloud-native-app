@@ -23,6 +23,22 @@ jobs:
     name: Run Linter & Unit Tests
     runs-on: ubuntu-latest
 
+    # 🟢 ADD THIS: Spin up Postgres service for pytest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: appuser
+          POSTGRES_PASSWORD: apppassword
+          POSTGRES_DB: itemsdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,10 +55,15 @@ jobs:
           pip install -r app/requirements.txt
 
       - name: Run Tests with Pytest
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: appuser
+          DB_PASSWORD: apppassword
+          DB_NAME: itemsdb
         run: |
           cd app
           pytest
-
   # ------------------------------------------------------------
   # JOB 2: Build, Scan & Deploy (Only on merge to main)
   # ------------------------------------------------------------
