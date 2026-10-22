@@ -12,7 +12,6 @@ on:
       - 'app/**'
 
 permissions:
-  id-token: write   # Required for AWS OIDC authentication
   contents: read    # Required to checkout code
 
 jobs:
@@ -77,11 +76,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials via OIDC
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
       - name: Login to Amazon ECR
         id: login-ecr
