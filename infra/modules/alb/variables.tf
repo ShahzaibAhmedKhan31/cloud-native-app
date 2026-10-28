@@ -29,3 +29,15 @@ variable "health_check_path" {
   type        = string
   default     = "/health"
 }
+
+variable "certificate_arn" {
+  description = "ACM Certificate ARN for HTTPS listener"
+  type        = string
+  default     = ""
+}
+
+variable "create_https_listener" {
+  description = "Whether to create HTTPS listener and HTTP-to-HTTPS redirect"
+  type        = bool
+  default     = false
+}

@@ -3,8 +3,8 @@
 # ============================================================
 resource "aws_ecr_repository" "this" {
   name                 = var.repository_name
-  image_tag_mutability = "MUTABLE"   # allows re-tagging "latest"
-  force_delete         = true   # 👈 ADD THIS LINE (allows destroy even with images inside)
+  image_tag_mutability = "MUTABLE" # allows re-tagging "latest"
+  force_delete         = true      # 👈 ADD THIS LINE (allows destroy even with images inside)
 
   # Scan images on push for vulnerabilities
   image_scanning_configuration {

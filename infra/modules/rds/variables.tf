@@ -52,7 +52,7 @@ variable "db_username" {
 variable "multi_az" {
   description = "Enable Multi-AZ for HA"
   type        = bool
-  default     = false   # dev: false (saves ~$15/mo); prod: true
+  default     = false # dev: false (saves ~$15/mo); prod: true
 }
 
 variable "backup_retention_days" {
@@ -70,11 +70,11 @@ variable "skip_final_snapshot" {
 variable "deletion_protection" {
   description = "Prevent accidental deletion"
   type        = bool
-  default     = false   # dev: false; prod: true
+  default     = false # dev: false; prod: true
 }
 
 variable "performance_insights_enabled" {
   description = "Enable Performance Insights"
   type        = bool
-  default     = false   # extra cost
+  default     = false # extra cost
 }

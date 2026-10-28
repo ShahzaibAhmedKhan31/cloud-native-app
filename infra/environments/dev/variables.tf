@@ -44,3 +44,20 @@ variable "github_username" {
   description = "GitHub Username for OIDC trust"
   type        = string
 }
+
+variable "domain_name" {
+  description = "Custom Domain Name registered in Hostinger"
+  type        = string
+  default     = ""
+}
+
+variable "subdomain" {
+  description = "Subdomain prefix (e.g. 'app')"
+  type        = string
+  default     = "app"
+}
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm notifications"
+  type        = string
+  default     = ""
+}

@@ -80,3 +80,23 @@ output "github_secret_access_key" {
   value     = module.github_oidc.secret_access_key
   sensitive = true
 }
+
+output "route53_nameservers" {
+  description = "COPY THESE 4 NAMESERVERS TO HOSTINGER"
+  value       = var.domain_name != "" ? module.dns_acm[0].name_servers : []
+}
+
+output "https_application_url" {
+  description = "Secure HTTPS Application URL"
+  value       = var.domain_name != "" ? "https://${module.dns_acm[0].fqdn}" : "N/A"
+}
+
+output "cloudwatch_dashboard_name" {
+  description = "Name of CloudWatch Dashboard"
+  value       = module.observability.dashboard_name
+}
+
+output "sns_alerts_topic_arn" {
+  description = "ARN of SNS Alerts Topic"
+  value       = module.observability.sns_topic_arn
+}

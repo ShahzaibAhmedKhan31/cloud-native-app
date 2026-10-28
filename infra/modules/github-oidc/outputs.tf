@@ -1,4 +1,10 @@
-output "role_arn" {
-  description = "ARN of the IAM Role for GitHub Actions to assume"
-  value       = aws_iam_role.github_actions.arn
+output "access_key_id" {
+  description = "AWS Access Key ID for GitHub Actions"
+  value       = aws_iam_access_key.github_actions.id
+}
+
+output "secret_access_key" {
+  description = "AWS Secret Access Key for GitHub Actions"
+  value       = aws_iam_access_key.github_actions.secret
+  sensitive   = true
 }

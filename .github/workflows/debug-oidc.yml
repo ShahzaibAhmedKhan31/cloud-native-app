@@ -1,0 +1,61 @@
+name: Debug OIDC Token
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  debug-oidc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch and decode GitHub OIDC token
+        shell: bash
+        run: |
+          TOKEN_RESPONSE=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+
+          TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.value')
+
+          echo "Decoded OIDC token claims:"
+          python3 - <<PY
+          import os, json, base64
+
+          token = """$TOKEN"""
+          payload = token.split(".")[1]
+
+          # Fix base64 padding
+          payload += "=" * (-len(payload) % 4)
+
+          decoded = base64.urlsafe_b64decode(payload.encode())
+          claims = json.loads(decoded)
+
+          print(json.dumps({
+              "iss": claims.get("iss"),
+              "aud": claims.get("aud"),
+              "sub": claims.get("sub"),
+              "repository": claims.get("repository"),
+              "repository_owner": claims.get("repository_owner"),
+              "ref": claims.get("ref"),
+              "event_name": claims.get("event_name")
+          }, indent=2))
+          PY
+
+      - name: Try assuming AWS role manually
+        shell: bash
+        run: |
+          TOKEN_RESPONSE=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+
+          TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.value')
+
+          aws sts assume-role-with-web-identity \
+            --role-arn "${{ secrets.AWS_ROLE_TO_ASSUME }}" \
+            --role-session-name "debug-oidc-session" \
+            --web-identity-token "$TOKEN" \
+            --duration-seconds 900

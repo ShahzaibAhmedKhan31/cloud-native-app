@@ -18,7 +18,7 @@ resource "aws_ecs_cluster" "this" {
 
   setting {
     name  = "containerInsights"
-    value = "disabled"   # dev: disabled to save costs; prod: enabled
+    value = "disabled" # dev: disabled to save costs; prod: enabled
   }
 
   tags = {
@@ -99,7 +99,7 @@ resource "aws_ecs_service" "this" {
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = [var.ecs_security_group_id]
-    assign_public_ip = false   # Private subnets use NAT Gateway
+    assign_public_ip = false # Private subnets use NAT Gateway
   }
 
   load_balancer {

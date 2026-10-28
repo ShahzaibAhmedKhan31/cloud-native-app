@@ -101,20 +101,6 @@ module "iam" {
 }
 
 # ============================================================
-# Application Load Balancer
-# ============================================================
-module "alb" {
-  source = "../../modules/alb"
-
-  name_prefix           = local.name_prefix
-  vpc_id                = module.vpc.vpc_id
-  public_subnet_ids     = module.vpc.public_subnet_ids
-  alb_security_group_id = module.security_groups.alb_sg_id
-  app_port              = var.app_port
-  health_check_path     = "/health"
-}
-
-# ============================================================
 # ECS Cluster, Task Definition & Service
 # ============================================================
 module "ecs" {
@@ -151,4 +137,52 @@ module "github_oidc" {
   name_prefix        = local.name_prefix
   github_org_or_user = var.github_username
   github_repo        = "cloud-native-app"
+}
+
+
+
+# ============================================================
+# DNS & SSL Certificate
+# ============================================================
+module "dns_acm" {
+  count  = var.domain_name != "" ? 1 : 0
+  source = "../../modules/dns-acm"
+
+  name_prefix  = local.name_prefix
+  domain_name  = var.domain_name
+  subdomain    = var.subdomain
+  alb_dns_name = module.alb.alb_dns_name
+  alb_zone_id  = module.alb.alb_zone_id
+}
+
+# ============================================================
+# Application Load Balancer
+# ============================================================
+module "alb" {
+  source = "../../modules/alb"
+
+  name_prefix           = local.name_prefix
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  alb_security_group_id = module.security_groups.alb_sg_id
+  app_port              = var.app_port
+  health_check_path     = "/health"
+  create_https_listener = var.domain_name != ""
+  certificate_arn       = var.domain_name != "" ? module.dns_acm[0].certificate_arn : ""
+}
+
+
+# ============================================================
+# Observability: CloudWatch Alarms, SNS Alerts & Dashboard
+# ============================================================
+module "observability" {
+  source = "../../modules/observability"
+
+  name_prefix             = local.name_prefix
+  aws_region              = var.aws_region
+  alert_email             = var.alert_email
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs.service_name
+  alb_arn_suffix          = module.alb.alb_arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
 }

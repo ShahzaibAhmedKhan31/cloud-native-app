@@ -14,7 +14,7 @@ resource "random_password" "db_password" {
 resource "aws_secretsmanager_secret" "db_credentials" {
   name                    = "${var.name_prefix}-db-credentials"
   description             = "RDS master credentials for ${var.name_prefix}"
-  recovery_window_in_days = 0   # 0 = immediate delete; use 7+ in production
+  recovery_window_in_days = 0 # 0 = immediate delete; use 7+ in production
 }
 
 resource "aws_secretsmanager_secret_version" "db_credentials" {
@@ -49,7 +49,7 @@ resource "aws_db_parameter_group" "this" {
 
   parameter {
     name  = "log_statement"
-    value = "none"   # dev: 'none'; prod/debug: 'all' or 'mod'
+    value = "none" # dev: 'none'; prod/debug: 'all' or 'mod'
   }
 
   tags = {
@@ -90,10 +90,10 @@ resource "aws_db_instance" "this" {
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name_prefix}-final-snapshot-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   deletion_protection       = var.deletion_protection
 
-  performance_insights_enabled = var.performance_insights_enabled
+  performance_insights_enabled    = var.performance_insights_enabled
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
-  apply_immediately = true   # dev: true; prod: false (schedule changes)
+  apply_immediately = true # dev: true; prod: false (schedule changes)
 
   tags = {
     Name = "${var.name_prefix}-postgres"
