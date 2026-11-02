@@ -61,3 +61,27 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+
+variable "min_capacity" {
+  description = "Minimum number of running ECS tasks for auto scaling"
+  type        = number
+  default     = 2
+}
+
+variable "max_capacity" {
+  description = "Maximum number of running ECS tasks for auto scaling"
+  type        = number
+  default     = 10
+}
+
+variable "cpu_target_value" {
+  description = "Target CPU utilization percentage for auto scaling"
+  type        = number
+  default     = 50.0
+}
+
+variable "memory_target_value" {
+  description = "Target Memory utilization percentage for auto scaling"
+  type        = number
+  default     = 70.0
+}

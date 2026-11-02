@@ -17,18 +17,18 @@ resource "aws_sns_topic_subscription" "email" {
 }
 
 # ============================================================
-# CloudWatch Alarm 1: ECS Service High CPU Utilization (> 80%)
+# CloudWatch Alarm 1: ECS Service High CPU Utilization
 # ============================================================
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${var.name_prefix}-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
+  evaluation_periods  = 1
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
   period              = 60
   statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "Triggers when ECS CPU utilization exceeds 80% for 2 consecutive minutes."
+  threshold           = var.cpu_threshold
+  alarm_description   = "Triggers when ECS CPU utilization exceeds threshold for 1 minute."
   alarm_actions       = [aws_sns_topic.alerts.arn]
   ok_actions          = [aws_sns_topic.alerts.arn]
 

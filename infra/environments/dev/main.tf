@@ -125,6 +125,12 @@ module "ecs" {
   db_name                   = module.rds.db_name
   db_user                   = "appuser"
   db_credentials_secret_arn = module.rds.db_credentials_secret_arn
+
+  # Auto Scaling parameters
+  min_capacity        = 2
+  max_capacity        = 10
+  cpu_target_value    = 5.0    # Lowered to 5.0% to trigger on light load
+  memory_target_value = 70.0
 }
 
 
@@ -185,4 +191,7 @@ module "observability" {
   ecs_service_name        = module.ecs.service_name
   alb_arn_suffix          = module.alb.alb_arn_suffix
   target_group_arn_suffix = module.alb.target_group_arn_suffix
+
+  # Lower threshold to 5.0% for testing
+  cpu_threshold           = 5.0
 }

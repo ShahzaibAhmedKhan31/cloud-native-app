@@ -33,3 +33,9 @@ variable "target_group_arn_suffix" {
   description = "ARN suffix of the Target Group (used in CloudWatch dimensions)"
   type        = string
 }
+
+variable "cpu_threshold" {
+  description = "CPU utilization threshold percentage for alarm"
+  type        = number
+  default     = 80.0
+}
